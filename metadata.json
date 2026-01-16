@@ -1,0 +1,5 @@
+{
+  "name": "JPEGifier",
+  "description": "An authentic client-side generation loss simulator that repeatedly encodes images to simulate digital decay without AI.",
+  "requestFramePermissions": []
+}
