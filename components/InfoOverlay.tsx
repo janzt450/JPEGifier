@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Share2, Github, Info, Shield, Bot, Map, Globe, X, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Share2, Github, Info, Shield, Bot, Map, X, ExternalLink, AlertTriangle, Copy, Check, Download } from 'lucide-react';
 
-type ModalType = 'about' | 'privacy' | 'ai' | 'roadmap' | 'external_warning' | null;
+type ModalType = 'about' | 'privacy' | 'ai' | 'roadmap' | 'external_warning' | 'share' | null;
 
 export const InfoOverlay: React.FC = () => {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const [hasAcceptedExternal, setHasAcceptedExternal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const accepted = localStorage.getItem('jpegifier_external_warning_accepted');
@@ -18,23 +19,17 @@ export const InfoOverlay: React.FC = () => {
   const closeModal = () => {
     setActiveModal(null);
     setPendingUrl(null);
+    setCopied(false);
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'JPEGifier',
-          text: 'Authentic digital decay simulator.',
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.log('Share canceled');
-      }
-    } else {
-      alert('Share URL copied to clipboard!');
-      navigator.clipboard.writeText(window.location.href);
-    }
+  const handleShare = () => {
+    setActiveModal('share');
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText("https://outlandproductions.neocities.org/JPEGifier.html");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleExternalLink = (e: React.MouseEvent, url: string) => {
@@ -56,23 +51,22 @@ export const InfoOverlay: React.FC = () => {
     closeModal();
   };
 
-  const handleSourceCode = (e: React.MouseEvent) => {
-    e.preventDefault();
-    alert("Source code repository is currently being organized for public release.");
-  };
-
   return (
     <>
       {/* Footer Navigation */}
       <div className="absolute bottom-0 left-0 right-0 p-4 z-40 flex justify-center pointer-events-none">
-        <div className="bg-gray-950/80 backdrop-blur-md border border-gray-800 rounded-full px-6 py-3 shadow-2xl pointer-events-auto flex items-center gap-6 overflow-x-auto max-w-full">
+        <div className="bg-gray-950/80 backdrop-blur-md border border-gray-800 rounded-full px-6 py-3 shadow-2xl pointer-events-auto flex items-center gap-6 overflow-x-auto max-w-full custom-scrollbar">
           <button onClick={handleShare} className="flex items-center gap-2 text-xs font-medium text-gray-400 hover:text-indigo-400 transition-colors whitespace-nowrap">
             <Share2 className="w-3 h-3" /> Share App
           </button>
           
-          <button onClick={handleSourceCode} className="flex items-center gap-2 text-xs font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap">
+          <a 
+            href="https://github.com/janzt450/JPEGifier"
+            onClick={(e) => handleExternalLink(e, "https://github.com/janzt450/JPEGifier")}
+            className="flex items-center gap-2 text-xs font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap"
+          >
             <Github className="w-3 h-3" /> View Source
-          </button>
+          </a>
 
           <button onClick={() => setActiveModal('about')} className="flex items-center gap-2 text-xs font-medium text-gray-400 hover:text-white transition-colors whitespace-nowrap">
             <Info className="w-3 h-3" /> About JPEGifier
@@ -95,14 +89,14 @@ export const InfoOverlay: React.FC = () => {
             onClick={(e) => handleExternalLink(e, "https://outlandproductions.neocities.org/")}
             className="flex items-center gap-2 text-xs font-medium text-gray-400 hover:text-emerald-400 transition-colors whitespace-nowrap"
           >
-            <Globe className="w-3 h-3" /> Website
+            <Download className="w-3 h-3" /> Downloads
           </a>
         </div>
       </div>
 
       {/* Modal Overlay */}
       {activeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={closeModal}>
           <div 
             className="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden relative animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
@@ -117,6 +111,40 @@ export const InfoOverlay: React.FC = () => {
 
             {/* Modal Content */}
             <div className="p-8">
+
+              {/* SHARE MODAL */}
+              {activeModal === 'share' && (
+                  <div className="space-y-6">
+                      <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                          <Share2 className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                          <h2 className="text-2xl font-bold text-white mb-1">Share JPEGifier</h2>
+                          <p className="text-indigo-400 text-sm font-medium">Spread the Digital Decay</p>
+                      </div>
+                      <div className="text-gray-300 text-sm leading-relaxed">
+                          <p>Copy the link below to share this tool with others.</p>
+                      </div>
+                      
+                      <div className="bg-gray-950 p-2 rounded-lg border border-gray-800 flex items-center gap-2">
+                          <input 
+                              type="text" 
+                              readOnly 
+                              value="https://outlandproductions.neocities.org/JPEGifier.html"
+                              className="bg-transparent border-none focus:ring-0 text-gray-300 text-sm w-full font-mono px-2 outline-none"
+                              onClick={(e) => e.currentTarget.select()}
+                          />
+                          <button 
+                              onClick={copyToClipboard}
+                              className={`p-2 rounded-md transition-all ${copied ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'}`}
+                              title="Copy to clipboard"
+                          >
+                              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          </button>
+                      </div>
+                      {copied && <p className="text-xs text-emerald-400 text-center animate-pulse">Link copied to clipboard!</p>}
+                  </div>
+              )}
 
               {/* EXTERNAL WARNING */}
               {activeModal === 'external_warning' && (

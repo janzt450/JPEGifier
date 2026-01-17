@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>JPEGifier - Authentic Bit Rot</title>
+    <meta name="description" content="An authentic client-side generation loss simulator that repeatedly encodes images to simulate digital decay without AI." />
+    <!-- Keeping Tailwind CDN for simplicity in this setup, though installing it via PostCSS is usually better for production speed -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       /* Custom Scrollbar for a cleaner look */
@@ -25,15 +27,18 @@
   <script type="importmap">
 {
   "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "vite": "https://esm.sh/vite@^7.3.1"
   }
 }
 </script>
 </head>
   <body class="bg-gray-950 text-gray-100 font-sans antialiased overflow-hidden">
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

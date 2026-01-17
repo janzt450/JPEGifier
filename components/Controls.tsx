@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Zap, Repeat, Dices, PanelLeft, PanelRight, Upload, BookOpen, Calculator, X, History as HistoryIcon, Scale } from 'lucide-react';
+import { Settings, Zap, Repeat, Dices, PanelLeft, PanelRight, Upload, BookOpen, Calculator, X, History as HistoryIcon, CheckSquare, Play } from 'lucide-react';
 import { ProcessorSettings } from '../types';
 
 interface ControlsProps {
@@ -9,9 +9,26 @@ interface ControlsProps {
   position: 'left' | 'right';
   onToggleLayout: () => void;
   onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  fileCount: number;
+  selectedCount: number;
+  onSelectAll: () => void;
+  onDeselectAll: () => void;
+  onProcess: () => void;
 }
 
-export const Controls: React.FC<ControlsProps> = ({ settings, onUpdate, disabled, position, onToggleLayout, onFileSelect }) => {
+export const Controls: React.FC<ControlsProps> = ({ 
+    settings, 
+    onUpdate, 
+    disabled, 
+    position, 
+    onToggleLayout, 
+    onFileSelect, 
+    fileCount,
+    selectedCount,
+    onSelectAll,
+    onDeselectAll,
+    onProcess
+}) => {
   const [showEducation, setShowEducation] = useState(false);
 
   const handleQualitySlider = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,149 +75,189 @@ export const Controls: React.FC<ControlsProps> = ({ settings, onUpdate, disabled
       <div>
         <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
           <Settings className="w-5 h-5 text-indigo-500" />
-          Configuration
+          Controls
         </h2>
-        <p className="text-gray-400 text-sm">
-          Adjust parameters to see changes in real-time.
-        </p>
-      </div>
-
-      <Divider />
-
-      {/* Dock Controls */}
-      <div>
-        <button 
-            onClick={onToggleLayout}
-            className="w-full flex items-center justify-center gap-2 text-xs font-medium text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 px-3 py-2 rounded-lg transition-all"
-        >
-             {position === 'left' ? <PanelRight className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
-             <span>{position === 'left' ? 'Dock Controls Right' : 'Dock Controls Left'}</span>
-        </button>
+        <div className="flex justify-between items-center text-xs text-gray-400">
+           <span>{fileCount} images loaded</span>
+           <button 
+                onClick={onToggleLayout}
+                className="hover:text-white transition-colors"
+                title={position === 'left' ? 'Dock Right' : 'Dock Left'}
+            >
+                {position === 'left' ? <PanelRight className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
+            </button>
+        </div>
       </div>
 
       <Divider />
 
       {/* Upload Button */}
       <div>
-         <label className="w-full bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 font-medium text-sm group">
-             <Upload className="w-4 h-4 group-hover:scale-110 transition-transform" />
-             <span>Upload Image</span>
+         <label className={`w-full bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 px-4 py-3 rounded-lg cursor-pointer transition-colors flex flex-col items-center justify-center gap-1 font-medium text-sm group ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+             <div className="flex items-center gap-2">
+                 <Upload className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                 <span>Upload Images</span>
+             </div>
+             <span className="text-[10px] text-gray-400 font-normal opacity-70 group-hover:opacity-100 transition-opacity">or drag & drop files</span>
              <input 
                  type="file" 
                  className="hidden" 
                  accept="image/*"
+                 multiple
                  onChange={onFileSelect}
+                 disabled={disabled}
              />
         </label>
       </div>
 
-      <Divider />
-
-      {/* Quality Control */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-end">
-          <label className="text-sm font-medium text-gray-300 flex items-center gap-2 mb-1">
-            <Zap className="w-4 h-4 text-yellow-500" />
-            JPEG Quality (%)
-          </label>
-          <div className="flex items-center gap-2">
-            <button
-                onClick={randomizeQuality}
-                className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
-                title="Randomize Quality"
-                disabled={disabled}
-            >
-                <Dices className="w-4 h-4" />
-            </button>
-            <input 
-                type="number"
-                min="1"
-                max="100"
-                value={Math.round(settings.quality * 100)}
-                onChange={handleQualityInput}
-                disabled={disabled}
-                className="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-right text-sm font-mono focus:outline-none focus:border-indigo-500 text-yellow-500"
-            />
+      {fileCount > 0 && (
+          <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-left-2">
+              <div className="flex items-center justify-between text-xs font-medium">
+                  <span className="text-gray-400">Selection ({selectedCount})</span>
+                  <div className="flex gap-2">
+                      <button onClick={onSelectAll} className="text-indigo-400 hover:text-white" title="Select All">All</button>
+                      <span className="text-gray-600">|</span>
+                      <button onClick={onDeselectAll} className="text-gray-500 hover:text-white" title="Deselect All">None</button>
+                  </div>
+              </div>
+              
+              {/* Process Button */}
+              <button 
+                  onClick={onProcess}
+                  disabled={disabled || selectedCount === 0}
+                  className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold text-lg shadow-lg transition-all
+                      ${disabled || selectedCount === 0 
+                        ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700' 
+                        : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/20 border border-indigo-500/50 hover:scale-[1.02]'
+                      }
+                  `}
+              >
+                  {disabled ? (
+                      'Processing...'
+                  ) : (
+                      <>
+                        <Play className="w-5 h-5 fill-current" />
+                        START PROCESS
+                      </>
+                  )}
+              </button>
+              
+              {selectedCount === 0 && (
+                  <p className="text-center text-xs text-yellow-500/80">Select images to configure and process</p>
+              )}
           </div>
-        </div>
-        
-        <input
-          type="range"
-          min="0.01"
-          max="1.0"
-          step="0.01"
-          value={settings.quality}
-          onChange={handleQualitySlider}
-          disabled={disabled}
-          className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
-        />
-        <p className="text-xs text-gray-500">
-          Lower quality introduces more artifacts per pass.
-        </p>
-      </div>
+      )}
 
       <Divider />
 
-      {/* Iterations Control */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-end">
-          <label className="text-sm font-medium text-gray-300 flex items-center gap-2 mb-1">
-            <Repeat className="w-4 h-4 text-blue-500" />
-            Target Iterations
-          </label>
-           <div className="flex items-center gap-2">
-            <button
-                onClick={randomizeIterations}
-                className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
-                title="Randomize Iterations"
-                disabled={disabled}
-            >
-                <Dices className="w-4 h-4" />
-            </button>
-            <input 
-                type="number"
-                min="1"
-                max="1000"
-                value={settings.iterations}
-                onChange={handleIterationsInput}
-                disabled={disabled}
-                className="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-right text-sm font-mono focus:outline-none focus:border-indigo-500 text-blue-500"
-            />
+      {/* Config Area - Disabled if no selection */}
+      <div className={`space-y-6 transition-opacity ${selectedCount === 0 ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+          <div className="flex items-center gap-2 mb-4">
+              <CheckSquare className="w-4 h-4 text-indigo-500" />
+              <span className="text-sm font-bold text-gray-200">Selected Settings</span>
           </div>
-        </div>
-        
-        <input
-          type="range"
-          min="1"
-          max="500"
-          step="1"
-          value={settings.iterations}
-          onChange={handleIterationsSlider}
-          disabled={disabled}
-          className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
-        />
-        
-        <div className="flex gap-2 justify-between">
-           <button 
-             onClick={() => onUpdate({...settings, iterations: 10})}
-             className="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded transition-colors"
-           >10x</button>
-           <button 
-             onClick={() => onUpdate({...settings, iterations: 50})}
-             className="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded transition-colors"
-           >50x</button>
-           <button 
-             onClick={() => onUpdate({...settings, iterations: 100})}
-             className="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded transition-colors"
-           >100x</button>
-           <button 
-             onClick={() => onUpdate({...settings, iterations: 200})}
-             className="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded transition-colors"
-           >200x</button>
-        </div>
-        <p className="text-xs text-gray-500">
-          Drag slider to add/remove passes dynamically.
-        </p>
+
+          {/* Quality Control */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-end">
+              <label className="text-sm font-medium text-gray-300 flex items-center gap-2 mb-1">
+                <Zap className="w-4 h-4 text-yellow-500" />
+                JPEG Quality
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                    onClick={randomizeQuality}
+                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
+                    title="Randomize Quality"
+                    disabled={disabled}
+                >
+                    <Dices className="w-4 h-4" />
+                </button>
+                <input 
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={Math.round(settings.quality * 100)}
+                    onChange={handleQualityInput}
+                    disabled={disabled}
+                    className="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-right text-sm font-mono focus:outline-none focus:border-indigo-500 text-yellow-500"
+                />
+              </div>
+            </div>
+            
+            <input
+              type="range"
+              min="0.01"
+              max="1.0"
+              step="0.01"
+              value={settings.quality}
+              onChange={handleQualitySlider}
+              disabled={disabled}
+              className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
+            />
+            <p className="text-xs text-gray-500">
+              Settings apply to {selectedCount} selected items.
+            </p>
+          </div>
+
+          {/* Iterations Control */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-end">
+              <label className="text-sm font-medium text-gray-300 flex items-center gap-2 mb-1">
+                <Repeat className="w-4 h-4 text-blue-500" />
+                Target Iterations
+              </label>
+               <div className="flex items-center gap-2">
+                <button
+                    onClick={randomizeIterations}
+                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
+                    title="Randomize Iterations"
+                    disabled={disabled}
+                >
+                    <Dices className="w-4 h-4" />
+                </button>
+                <input 
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={settings.iterations}
+                    onChange={handleIterationsInput}
+                    disabled={disabled}
+                    className="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-right text-sm font-mono focus:outline-none focus:border-indigo-500 text-blue-500"
+                />
+              </div>
+            </div>
+            
+            <input
+              type="range"
+              min="1"
+              max="500"
+              step="1"
+              value={settings.iterations}
+              onChange={handleIterationsSlider}
+              disabled={disabled}
+              className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
+            />
+            
+            <div className="flex gap-2 justify-between">
+               <button 
+                 onClick={() => onUpdate({...settings, iterations: 10})}
+                 className="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded transition-colors"
+               >10x</button>
+               <button 
+                 onClick={() => onUpdate({...settings, iterations: 50})}
+                 className="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded transition-colors"
+               >50x</button>
+               <button 
+                 onClick={() => onUpdate({...settings, iterations: 100})}
+                 className="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded transition-colors"
+               >100x</button>
+               <button 
+                 onClick={() => onUpdate({...settings, iterations: 200})}
+                 className="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded transition-colors"
+               >200x</button>
+            </div>
+          </div>
       </div>
       
       <div className="mt-auto">
@@ -274,22 +331,6 @@ export const Controls: React.FC<ControlsProps> = ({ settings, onUpdate, disabled
                                   <span>Discrete Cosine Transform (DCT), proposed by <strong>Nasir Ahmed</strong> in 1972.</span>
                               </li>
                           </ul>
-                      </section>
-
-                      {/* Backers */}
-                      <section>
-                          <h3 className="text-sm font-bold text-gray-200 mb-2 flex items-center gap-2">
-                             <Scale className="w-4 h-4 text-blue-500" />
-                             Licensing & Legacy
-                          </h3>
-                           <div className="text-gray-400 text-xs space-y-2 leading-relaxed">
-                              <p>
-                                  The ubiquity of JPEG is no accident. While the algorithm was complex, the committee ensured the "baseline" standard could be used royalty-free.
-                              </p>
-                              <p>
-                                  Major tech giants of the era—including <strong>IBM, Mitsubishi Electric, AT&T, and Canon</strong>—held patents relevant to the technology but agreed to license them for free to establish JPEG as the universal standard for digital photography.
-                              </p>
-                          </div>
                       </section>
                   </div>
                </div>
